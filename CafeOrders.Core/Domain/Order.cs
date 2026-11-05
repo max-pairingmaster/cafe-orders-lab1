@@ -1,9 +1,17 @@
 namespace CafeOrders.Core.Domain;
 
+/// <summary>
+/// Представляє замовлення в системі кафе.
+/// </summary>
 public class Order
 {
     private readonly List<string[]> _lines = new();
 
+    /// <summary>
+    /// Ініціалізує новий екземпляр замовлення.
+    /// </summary>
+    /// <param name="id">Ідентифікатор замовлення.</param>
+    /// <param name="customerName">Ім'я клієнта.</param>
     public Order(string id, string customerName)
     {
         Id = id;
@@ -11,14 +19,32 @@ public class Order
         CreatedAt = DateTime.Now;
     }
 
+    /// <summary>
+    /// Отримує унікальний ідентифікатор замовлення.
+    /// </summary>
     public string Id { get; private set; }
 
+    /// <summary>
+    /// Отримує ім'я клієнта, що оформив замовлення.
+    /// </summary>
     public string CustomerName { get; private set; }
 
+    /// <summary>
+    /// Отримує числовий код стану замовлення.
+    /// </summary>
     public int Status { get; private set; }
 
+    /// <summary>
+    /// Отримує дату та час створення замовлення.
+    /// </summary>
     public DateTime CreatedAt { get; private set; }
 
+    /// <summary>
+    /// Додає до замовлення рядок із товаром.
+    /// </summary>
+    /// <param name="sku">Артикул товару.</param>
+    /// <param name="quantity">Кількість одиниць.</param>
+    /// <param name="unitPrice">Ціна за одиницю, грн.</param>
     public void AddLine(string sku, int quantity, decimal unitPrice)
     {
         string[] line = new string[3];
@@ -28,6 +54,11 @@ public class Order
         _lines.Add(line);
     }
 
+    /// <summary>
+    /// Обчислює підсумкову суму замовлення з урахуванням знижок та ПДВ.
+    /// </summary>
+    /// <param name="isRegularCustomer">Ознака постійного покупця.</param>
+    /// <returns>Підсумкова вартість замовлення.</returns>
     public decimal CalculateTotal(bool isRegularCustomer)
     {
         decimal total = 0;
@@ -40,7 +71,7 @@ public class Order
             lineCount = lineCount + 1;
         }
 
-        // if (total > 500) { total = total - 50; } // стара знижка
+        // Порядок нарахування: спочатку індивідуальна знижка, потім гуртова за кількість рядків
         if (isRegularCustomer == true && total > 1000)
         {
             total = total * 0.9m;
@@ -64,10 +95,16 @@ public class Order
             total = 0;
         }
 
+        // Ставка ПДВ нараховується на суму вже після врахування всіх знижок
         total = total + total * 0.2m;
         return Math.Round(total, 2);
     }
 
+    /// <summary>
+    /// Змінює стан замовлення, якщо перехід дозволений правилами предметної області.
+    /// </summary>
+    /// <param name="newStatus">Цільовий стан замовлення.</param>
+    /// <returns>true, якщо перехід виконано; false, якщо він заборонений.</returns>
     public bool TryChangeStatus(int newStatus)
     {
         if (Status == 0 && newStatus == 1)
@@ -91,6 +128,10 @@ public class Order
         return false;
     }
 
+    /// <summary>
+    /// Перевіряє коректність заповнення обов'язкових полів замовлення.
+    /// </summary>
+    /// <returns>true, якщо замовлення валідне; інакше false.</returns>
     public bool IsValid()
     {
         if (Id != null && Id != ""
@@ -107,6 +148,10 @@ public class Order
         return false;
     }
 
+    /// <summary>
+    /// Формує текстовий звіт замовлення із деталізацією рядків та підсумком.
+    /// </summary>
+    /// <returns>Текстовий рядок звіту.</returns>
     public string BuildReport()
     {
         string report = "";
@@ -125,6 +170,12 @@ public class Order
         return report;
     }
 
+    /// <summary>
+    /// Шукає замовлення у списку за вказаним ідентифікатором.
+    /// </summary>
+    /// <param name="orders">Колекція замовлень для пошуку.</param>
+    /// <param name="orderId">Ідентифікатор замовлення.</param>
+    /// <returns>Знайдене замовлення або null, якщо не знайдено.</returns>
     public static Order? FindById(List<Order> orders, string orderId)
     {
         for (int i = 0; i < orders.Count; i++)
